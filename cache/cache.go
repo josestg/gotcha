@@ -46,28 +46,52 @@ type Option struct {
 	MaxMemory     uint64        // Max Memory of item stored for eviction
 }
 
-// SetAlgorithm will set the algorithm value
-func (o *Option) SetAlgorithm(algorithm string) *Option {
-	o.AlgorithmType = algorithm
-	return o
+// OptionBuilder is a function type for building an Option by composing smaller option.
+type OptionBuilder func(opt Option) Option
+
+// NewOption creates a new OptionBuilder.
+func NewOption() OptionBuilder {
+	// returning an identity function.
+	return func(opt Option) Option { return opt }
 }
 
-// SetExpiryTime will set the expiry time
-func (o *Option) SetExpiryTime(expiry time.Duration) *Option {
-	o.ExpiryTime = expiry
-	return o
+// Build builds the Option.
+func (f OptionBuilder) Build() Option { return f(Option{}) }
+
+// SetAlgorithm will set the algorithm value.
+func (f OptionBuilder) SetAlgorithm(algorithm string) OptionBuilder {
+	return func(opt Option) Option {
+		opt = f(opt)
+		opt.AlgorithmType = algorithm
+		return opt
+	}
 }
 
-// SetMaxSizeItem will set the maximum size of item in cache
-func (o *Option) SetMaxSizeItem(size uint64) *Option {
-	o.MaxSizeItem = size
-	return o
+// SetExpiryTime will set the expiry time.
+func (f OptionBuilder) SetExpiryTime(expiry time.Duration) OptionBuilder {
+	return func(opt Option) Option {
+		opt = f(opt)
+		opt.ExpiryTime = expiry
+		return opt
+	}
 }
 
-// SetMaxMemory will set the maximum memory will used for cache
-func (o *Option) SetMaxMemory(memory uint64) *Option {
-	o.MaxMemory = memory
-	return o
+// SetMaxSizeItem will set the maximum size of item in cache.
+func (f OptionBuilder) SetMaxSizeItem(size uint64) OptionBuilder {
+	return func(opt Option) Option {
+		opt = f(opt)
+		opt.MaxSizeItem = size
+		return opt
+	}
+}
+
+// SetMaxMemory will set the maximum memory will be used for cache.
+func (f OptionBuilder) SetMaxMemory(memory uint64) OptionBuilder {
+	return func(opt Option) Option {
+		opt = f(opt)
+		opt.MaxMemory = memory
+		return opt
+	}
 }
 
 // Cache represent the public API that will available used by user

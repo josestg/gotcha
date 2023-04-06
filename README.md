@@ -117,7 +117,7 @@ import (
 )
 
 func main() {
-	cache := gotcha.New(
+	cache := gotcha.NewWithOption(
 		gotcha.NewOption().SetAlgorithm(cache.LRUAlgorithm).
 			SetExpiryTime(time.Minute * 10).SetMaxSizeItem(100),
 	)
@@ -147,7 +147,7 @@ import (
 )
 
 func main() {
-	cache := gotcha.New(
+	cache := gotcha.NewWithOption(
 		gotcha.NewOption().SetAlgorithm(cache.LFUAlgorithm).
 			SetExpiryTime(time.Minute * 10).SetMaxSizeItem(100),
 	)

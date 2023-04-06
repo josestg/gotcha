@@ -15,51 +15,32 @@ var (
 	DefaultCache = New()
 )
 
-// New will create a new cache client. If the options not set, the cache will use the default options
-func New(options ...*cache.Option) (c cache.Cache) {
-	option := mergeOptions(options...)
-	if option.MaxSizeItem == 0 {
-		// Use default
-		option.MaxSizeItem = cache.DefaultSize
-	}
-	if option.AlgorithmType == "" {
-		// Use LRU Default
-		option.AlgorithmType = cache.LRUAlgorithm
-	}
-	if option.ExpiryTime == 0 {
-		// Use default expiry time
-		option.ExpiryTime = cache.DefaultExpiryTime
-	}
+// New will create a new cache client with default option.
+func New() cache.Cache {
+	return NewWithOption(DefaultOption())
+}
 
-	c = &Cache{
-		repo:  NewRepository(*option),
+// NewOption returns an empty option builder.
+func NewOption() cache.OptionBuilder {
+	return cache.NewOption()
+}
+
+// DefaultOption returns an option builder with default value.
+// The builder is useful when need to override some options and keep the rest as default.
+// To create a fresh new option please check NewOption.
+func DefaultOption() cache.OptionBuilder {
+	return NewOption().
+		SetAlgorithm(cache.DefaultAlgorithm).
+		SetExpiryTime(cache.DefaultExpiryTime).
+		SetMaxSizeItem(cache.DefaultSize)
+}
+
+// NewWithOption creates a new cache client with configurable options.
+func NewWithOption(option cache.OptionBuilder) cache.Cache {
+	return &Cache{
+		repo:  NewRepository(option.Build()),
 		mutex: &sync.RWMutex{},
 	}
-	return
-}
-
-// NewOption return an empty option
-func NewOption() (op *cache.Option) {
-	return &cache.Option{}
-}
-
-func mergeOptions(options ...*cache.Option) (opts *cache.Option) {
-	opts = new(cache.Option)
-	for _, op := range options {
-		if op.AlgorithmType != "" {
-			opts.AlgorithmType = op.AlgorithmType
-		}
-		if op.ExpiryTime != 0 {
-			opts.ExpiryTime = op.ExpiryTime
-		}
-		if op.MaxMemory != 0 {
-			opts.MaxMemory = op.MaxMemory
-		}
-		if op.MaxSizeItem != 0 {
-			opts.MaxSizeItem = op.MaxSizeItem
-		}
-	}
-	return
 }
 
 // Set will set an item to cache using default option
@@ -141,9 +122,6 @@ func (c *Cache) Delete(key string) (err error) {
 	c.mutex.Lock()
 	_, err = c.repo.Delete(key)
 	c.mutex.Unlock()
-	if err != nil {
-		return
-	}
 	return
 }
 
